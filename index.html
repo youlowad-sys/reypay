@@ -377,6 +377,8 @@ body::after{
 
 /* === LANDSCAPE MOBILE === */
 @media(max-height:500px) and (min-width:600px){
+  /* Prevent Safari landscape text auto-enlargement */
+  body{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important}
   /* Nav: show links, hide burger */
   .nav{padding:8px 0}
   .nav.scrolled{padding:6px 0}
@@ -450,7 +452,7 @@ body::after{
   .orbital-wrap>div:first-child span[style*="font-size:32px"]{font-size:22px!important}
   .orbital-wrap>div:first-child div[style*="font-size:15px"]{font-size:12px!important}
   .orbital-wrap>div:first-child div[style*="font-size:13px"]{font-size:10px!important;line-height:1.4!important}
-  .orbital-canvas-box{max-height:none!important;aspect-ratio:auto!important;width:100%!important;height:100%!important;overflow:visible!important}
+  .orbital-canvas-box{max-height:none!important;aspect-ratio:auto!important;width:100%!important;height:100%!important;overflow:hidden!important}
   .orbital-info{padding:12px 14px!important;min-height:auto!important;align-self:stretch!important;display:flex!important;flex-direction:column!important;justify-content:flex-start!important;margin-top:0!important}
   .orbital-info-inner{display:flex!important;flex-wrap:wrap!important;gap:0!important;align-items:baseline!important}
   .orbital-info-id{font-size:20px!important;min-width:auto!important;margin-right:8px!important}
@@ -480,8 +482,15 @@ body::after{
   .final-cta{padding:40px 0}
   .final-cta h2{font-size:clamp(22px,3.5vw,32px)}
   /* Footer */
-  .footer{padding:32px 0 16px}
-  .ft-grid{margin-bottom:24px}
+  .footer{padding:20px 0 12px!important}
+  .ft-grid{margin-bottom:12px!important;grid-template-columns:auto auto auto!important;gap:24px!important;align-items:start!important}
+  .ft-brand p{font-size:11px!important}
+  .ft-col h4{font-size:9px!important;margin-bottom:8px!important}
+  .ft-col a{display:inline!important;font-size:11px!important;padding:0!important;margin-right:10px!important}
+  .ft-bottom{padding-top:12px!important}
+  .ft-bottom .copy{font-size:9px!important}
+  /* Geo canvas brightness */
+  #geoCanvas{filter:brightness(1.5) contrast(1.1)!important}
 }
 
 /* ==============================================
