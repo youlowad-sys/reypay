@@ -51,7 +51,7 @@
 
 /* === RESET === */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{font-family:var(--sans);background:var(--void);color:var(--ivory);line-height:1.7;overflow-x:hidden;cursor:none;position:relative;font-size:15px}
 
 /* === GLOBAL GRADIENT MESH — animated fixed background === */
@@ -377,8 +377,6 @@ body::after{
 
 /* === LANDSCAPE MOBILE === */
 @media(max-height:500px) and (min-width:600px){
-  /* Prevent Safari landscape text auto-enlargement */
-  body{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important}
   /* Nav: show links, hide burger */
   .nav{padding:8px 0}
   .nav.scrolled{padding:6px 0}
