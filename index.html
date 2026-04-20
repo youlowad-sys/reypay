@@ -2626,7 +2626,12 @@ window.addEventListener('scroll',()=>{
   if(!canvas)return;
   const ctx=canvas.getContext('2d');
   let W,H,nodes=[],edges=[],signals=[],mouseX=-999,mouseY=-999;
-  const accentRGB=[64,224,255]; // sync with --acid
+  const accentRGB=[64,224,255];
+  const isMobile=window.innerWidth<1024;
+  let frame=0,paused=false;
+
+  // Pause when tab hidden
+  document.addEventListener('visibilitychange',()=>{paused=document.hidden;if(!paused)requestAnimationFrame(draw)});
 
   function resize(){
     W=canvas.width=window.innerWidth*devicePixelRatio;
@@ -2641,7 +2646,7 @@ window.addEventListener('scroll',()=>{
   function initNodes(){
     nodes=[];edges=[];
     const rW=window.innerWidth,rH=window.innerHeight;
-    const count=Math.floor(rW*rH/18000)+25;
+    const count=isMobile?Math.floor(rW*rH/35000)+12:Math.floor(rW*rH/18000)+25;
     for(let i=0;i<count;i++){
       nodes.push({
         x:Math.random()*rW,y:Math.random()*rH,
@@ -2652,7 +2657,7 @@ window.addEventListener('scroll',()=>{
   }
 
   function spawnSignal(){
-    if(edges.length===0)return;
+    if(edges.length===0||signals.length>8)return;
     const e=edges[Math.floor(Math.random()*edges.length)];
     signals.push({a:e[0],b:e[1],t:0,speed:.006+Math.random()*.012});
   }
@@ -2661,41 +2666,43 @@ window.addEventListener('scroll',()=>{
   window.addEventListener('mouseleave',()=>{mouseX=-999;mouseY=-999});
 
   function draw(){
+    if(paused)return;
+    frame++;
+    // Mobile: skip every other frame
+    if(isMobile&&frame%2!==0){requestAnimationFrame(draw);return}
+
     const rW=window.innerWidth,rH=window.innerHeight;
     ctx.clearRect(0,0,rW,rH);
 
-    // Update nodes + mouse attraction
     nodes.forEach(n=>{
       n.x+=n.vx;n.y+=n.vy;n.pulse+=.025;
       if(n.x<0||n.x>rW)n.vx*=-1;
       if(n.y<0||n.y>rH)n.vy*=-1;
-      // mouse influence
-      const mdx=mouseX-n.x,mdy=mouseY-n.y;
-      const mDist=Math.sqrt(mdx*mdx+mdy*mdy);
-      if(mDist<200){
-        const force=(200-mDist)/200*.15;
-        n.vx-=(mdx/mDist)*force;
-        n.vy-=(mdy/mDist)*force;
+      if(!isMobile){
+        const mdx=mouseX-n.x,mdy=mouseY-n.y;
+        const mDist=Math.sqrt(mdx*mdx+mdy*mdy);
+        if(mDist<200){
+          const force=(200-mDist)/200*.15;
+          n.vx-=(mdx/mDist)*force;n.vy-=(mdy/mDist)*force;
+        }
       }
-      // damping
       n.vx*=.985;n.vy*=.985;
-      // min speed
       const sp=Math.sqrt(n.vx*n.vx+n.vy*n.vy);
       if(sp<.15){n.vx+=(Math.random()-.5)*.02;n.vy+=(Math.random()-.5)*.02}
     });
 
-    // Build edges (connect nearby nodes)
+    // Build edges — use squared distance to avoid sqrt
     edges=[];
-    const maxDist=180;
+    const maxDist=isMobile?140:180;
+    const maxD2=maxDist*maxDist;
     for(let i=0;i<nodes.length;i++){
       for(let j=i+1;j<nodes.length;j++){
         const dx=nodes[i].x-nodes[j].x,dy=nodes[i].y-nodes[j].y;
-        const dist=Math.sqrt(dx*dx+dy*dy);
-        if(dist<maxDist)edges.push([i,j,dist]);
+        const d2=dx*dx+dy*dy;
+        if(d2<maxD2)edges.push([i,j,Math.sqrt(d2)]);
       }
     }
 
-    // Draw edges
     edges.forEach(([i,j,dist])=>{
       const alpha=.12*(1-dist/maxDist);
       ctx.beginPath();
@@ -2706,20 +2713,20 @@ window.addEventListener('scroll',()=>{
       ctx.stroke();
     });
 
-    // Draw nodes
     nodes.forEach(n=>{
       const glow=.4+Math.sin(n.pulse)*.25;
       ctx.beginPath();
       ctx.arc(n.x,n.y,n.r,0,Math.PI*2);
       ctx.fillStyle=`rgba(${accentRGB},${glow})`;
       ctx.fill();
-      ctx.beginPath();
-      ctx.arc(n.x,n.y,n.r*3.5,0,Math.PI*2);
-      ctx.fillStyle=`rgba(${accentRGB},${glow*.12})`;
-      ctx.fill();
+      if(!isMobile){
+        ctx.beginPath();
+        ctx.arc(n.x,n.y,n.r*3.5,0,Math.PI*2);
+        ctx.fillStyle=`rgba(${accentRGB},${glow*.12})`;
+        ctx.fill();
+      }
     });
 
-    // Draw signals
     for(let s=signals.length-1;s>=0;s--){
       const sig=signals[s];
       sig.t+=sig.speed;
@@ -2733,20 +2740,9 @@ window.addEventListener('scroll',()=>{
       ctx.arc(x,y,3.5,0,Math.PI*2);
       ctx.fillStyle=`rgba(${accentRGB},${alpha})`;
       ctx.fill();
-      ctx.beginPath();
-      ctx.arc(x,y,12,0,Math.PI*2);
-      ctx.fillStyle=`rgba(${accentRGB},${alpha*.18})`;
-      ctx.fill();
-      // trailing line
-      const tx=a.x+(b.x-a.x)*Math.max(0,sig.t-.08);
-      const ty=a.y+(b.y-a.y)*Math.max(0,sig.t-.08);
-      ctx.beginPath();
-      ctx.moveTo(tx,ty);ctx.lineTo(x,y);
-      ctx.strokeStyle=`rgba(${accentRGB},${alpha*.6})`;
-      ctx.lineWidth=2;ctx.stroke();
     }
 
-    if(Math.random()<.08)spawnSignal();
+    if(Math.random()<(isMobile?.03:.08))spawnSignal();
     requestAnimationFrame(draw);
   }
 
@@ -3892,12 +3888,10 @@ if(heroBgNum){
       heroBgNum.style.opacity='.08';
     },600);
   },2400);
-  (function pls(){
-    ph+=.01;
-    const s=1+Math.sin(ph)*.03;
-    heroBgNum.style.transform=`translateY(calc(-50% + ${scrollY*.08}px)) scale(${s})`;
-    requestAnimationFrame(pls);
-  })();
+  // Update on scroll only (no infinite RAF)
+  window.addEventListener('scroll',()=>{
+    heroBgNum.style.transform=`translateY(calc(-50% + ${scrollY*.08}px))`;
+  },{passive:true});
 }
 
 // === PARALLAX: float orbs move on scroll ===
@@ -3948,15 +3942,14 @@ window.addEventListener('scroll',()=>{
   }
 },{passive:true});
 
-// Mesh blob parallax
+// Mesh blob parallax — scroll-driven, no RAF
 const blobs=document.querySelectorAll('.mesh-bg .blob');
-(function animB(){
+window.addEventListener('scroll',()=>{
   blobs.forEach((b,i)=>{
     const sp=.015+i*.008;
     b.style.transform=`translate(${Math.sin(scrollY*sp+i*2)*30}px,${Math.cos(scrollY*sp+i*1.5)*25}px)`;
   });
-  requestAnimationFrame(animB);
-})();
+},{passive:true});
 
 // ============================================================
 //  NAV + MOBILE + FAQ + ACCORDION + MODAL + CALC
@@ -4114,11 +4107,17 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
     }
   }
 
-  // Spawn stars at intervals — lightweight
-  setInterval(spawnStar, 800);
-  // Initial burst
-  setTimeout(spawnStar, 200);
-  setTimeout(spawnStar, 500);
+  // Spawn stars only when visible
+  let starVisible=false,starInterval=null;
+  const starObs=new IntersectionObserver(([e])=>{
+    starVisible=e.isIntersecting;
+    if(starVisible&&!starInterval){
+      starInterval=setInterval(spawnStar,window.innerWidth<1024?1500:800);
+    }else if(!starVisible&&starInterval){
+      clearInterval(starInterval);starInterval=null;
+    }
+  },{threshold:0.1});
+  starObs.observe(triLayout);
 })();
 
 /* ===== FLOW GRAPH (replaced by Orbital Canvas — see orbitalAnimation above) ===== */
@@ -4201,14 +4200,17 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
       }
     }
     idleLoop(){
+      this.idleRunning=true;
       const idle=()=>{
+        if(!this.idleRunning)return;
         this.draw();
-        // Occasional particle
-        if(Math.random()<0.04)this.spawnParticle();
+        if(this.particles.length<15&&Math.random()<0.02)this.spawnParticle();
         requestAnimationFrame(idle);
       };
       requestAnimationFrame(idle);
     }
+    stopIdle(){this.idleRunning=false}
+    resumeIdle(){if(this.started&&!this.idleRunning)this.idleLoop()}
     spawnParticle(){
       const angle=this.getAngleForProgress(this.progress*this.target);
       const px=this.cx+Math.cos(angle)*this.radius;
@@ -4467,6 +4469,13 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
     });
   },{threshold:.15});
   cards.forEach(c=>cardObs.observe(c));
+
+  /* --- Pause gauge idle when not visible --- */
+  const gaugeVisObs=new IntersectionObserver(([e])=>{
+    if(e.isIntersecting){gaugeLeft.resumeIdle();gaugeRight.resumeIdle()}
+    else{gaugeLeft.stopIdle();gaugeRight.stopIdle()}
+  },{threshold:0.05});
+  gaugeVisObs.observe(dual);
 
   /* --- Quote reveals --- */
   const quotes=dual.querySelectorAll('.ops-pq');
