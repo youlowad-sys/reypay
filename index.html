@@ -3955,6 +3955,22 @@ window.addEventListener('scroll',()=>{
 //  NAV + MOBILE + FAQ + ACCORDION + MODAL + CALC
 // ============================================================
 const nav=document.getElementById('nav');
+// Fix Telegram in-app browser: nav gets pushed down, detect and compensate
+(function fixTelegramNav(){
+  const isTg=/Telegram/i.test(navigator.userAgent)||window.TelegramWebviewProxy;
+  if(!isTg)return;
+  function fix(){
+    const gap=nav.getBoundingClientRect().top;
+    if(gap>0){
+      nav.style.top=-gap+'px';
+      document.body.style.paddingTop=(nav.offsetHeight-gap)+'px';
+    }
+  }
+  fix();
+  window.addEventListener('resize',fix);
+  setTimeout(fix,100);
+  setTimeout(fix,500);
+})();
 window.addEventListener('scroll',()=>{nav.classList.toggle('scrolled',scrollY>50)},{passive:true});
 
 function toggleMobile(){document.getElementById('mobileMenu').classList.toggle('open')}
