@@ -51,8 +51,8 @@
 
 /* === RESET === */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;-webkit-text-size-adjust:100%;text-size-adjust:100%}
-body{font-family:var(--sans);background:var(--void);color:var(--ivory);line-height:1.7;overflow-x:hidden;cursor:none;position:relative;font-size:15px}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;-webkit-text-size-adjust:100%;text-size-adjust:100%;overflow-x:hidden}
+body{font-family:var(--sans);background:var(--void);color:var(--ivory);line-height:1.7;cursor:none;font-size:15px}
 
 /* === GLOBAL GRADIENT MESH — animated fixed background === */
 .global-gradient-mesh{
@@ -310,7 +310,7 @@ body::after{
 /* ==============================================
    4.0 NAV
    ============================================== */
-.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:20px 0;transition:padding .3s,background .3s,border .3s;-webkit-transform:translateZ(0);transform:translateZ(0);will-change:transform}
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:20px 0;transition:padding .3s,background .3s,border .3s;-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0)}
 .nav.scrolled{background:rgba(12,17,32,.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--ivory-line);padding:14px 0}
 .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:24px}
 .nav-logo{font-family:var(--display);font-size:28px;font-weight:700;letter-spacing:-.03em;color:var(--ivory);transition:color .2s;display:inline-flex;overflow:hidden;position:relative}
