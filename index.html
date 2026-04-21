@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Ray v4 — Pain+Solution Stability | AI-платформа USDT</title>
 <meta name="description" content="AI-гибридный PSP для high-risk в Аргентине. Выплаты 0.2с, сеттлмент T+0 в USDT, $0 замороженных — свой working capital. 300+ корп. счетов.">
 <meta property="og:title" content="Ray">
@@ -310,7 +310,7 @@ body::after{
 /* ==============================================
    4.0 NAV
    ============================================== */
-.nav{position:-webkit-sticky;position:sticky;top:0;left:0;right:0;z-index:100;padding:0 0 20px;transition:padding .3s,background .3s,border .3s;background:#0C1120}
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:env(safe-area-inset-top,0px) 0 20px;transition:padding .3s,background .3s,border .3s;background:#0C1120}
 .nav.scrolled{background:rgba(12,17,32,1);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--ivory-line);padding:0 0 14px}
 .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:24px}
 .nav-logo{font-family:var(--display);font-size:28px;font-weight:700;letter-spacing:-.03em;color:var(--ivory);transition:color .2s;display:inline-flex;overflow:hidden;position:relative}
@@ -2066,8 +2066,10 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;hei
 .crt-ticker span b{color:#50C878;font-weight:700;letter-spacing:.08em;opacity:.7}
 .crt-ticker span i{font-style:normal;color:#00D084}
 @keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
+body{padding-top:calc(48px + env(safe-area-inset-top,0px))!important}
 @media(max-height:500px) and (min-width:600px){
   .crt-ticker{height:18px;font-size:8px}
+  body{padding-top:calc(32px + env(safe-area-inset-top,0px))!important}
 }
 </style>
 
