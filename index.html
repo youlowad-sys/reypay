@@ -310,7 +310,7 @@ body::after{
 /* ==============================================
    4.0 NAV
    ============================================== */
-.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 0 20px;transition:padding .3s,background .3s,border .3s;background:var(--void)}
+.nav{position:-webkit-sticky;position:sticky;top:0;left:0;right:0;z-index:100;padding:0 0 20px;transition:padding .3s,background .3s,border .3s;background:#0C1120}
 .nav.scrolled{background:rgba(12,17,32,1);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--ivory-line);padding:0 0 14px}
 .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:24px}
 .nav-logo{font-family:var(--display);font-size:28px;font-weight:700;letter-spacing:-.03em;color:var(--ivory);transition:color .2s;display:inline-flex;overflow:hidden;position:relative}
@@ -2066,10 +2066,8 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;hei
 .crt-ticker span b{color:#50C878;font-weight:700;letter-spacing:.08em;opacity:.7}
 .crt-ticker span i{font-style:normal;color:#00D084}
 @keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
-body{padding-top:48px!important}
 @media(max-height:500px) and (min-width:600px){
   .crt-ticker{height:18px;font-size:8px}
-  body{padding-top:32px!important}
 }
 </style>
 
