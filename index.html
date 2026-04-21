@@ -52,7 +52,7 @@
 /* === RESET === */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;-webkit-text-size-adjust:100%;text-size-adjust:100%;background:#0C1120}
-body{font-family:var(--sans);background:var(--void);color:var(--ivory);line-height:1.7;overflow-x:hidden;cursor:none;font-size:15px}
+body{font-family:var(--sans);background:var(--void);color:var(--ivory);line-height:1.7;overflow-x:clip;cursor:none;font-size:15px}
 
 /* === GLOBAL GRADIENT MESH — animated fixed background === */
 .global-gradient-mesh{
@@ -310,7 +310,7 @@ body::after{
 /* ==============================================
    4.0 NAV
    ============================================== */
-.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:env(safe-area-inset-top,0px) 0 20px;transition:padding .3s,background .3s,border .3s;background:#0C1120}
+.nav{position:-webkit-sticky;position:sticky;top:0;left:0;right:0;z-index:100;padding:0 0 20px;transition:padding .3s,background .3s,border .3s;background:#0C1120}
 .nav.scrolled{background:rgba(12,17,32,1);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--ivory-line);padding:0 0 14px}
 .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:24px}
 .nav-logo{font-family:var(--display);font-size:28px;font-weight:700;letter-spacing:-.03em;color:var(--ivory);transition:color .2s;display:inline-flex;overflow:hidden;position:relative}
@@ -2066,10 +2066,8 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;hei
 .crt-ticker span b{color:#50C878;font-weight:700;letter-spacing:.08em;opacity:.7}
 .crt-ticker span i{font-style:normal;color:#00D084}
 @keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
-body{padding-top:calc(48px + env(safe-area-inset-top,0px))!important}
 @media(max-height:500px) and (min-width:600px){
   .crt-ticker{height:18px;font-size:8px}
-  body{padding-top:calc(32px + env(safe-area-inset-top,0px))!important}
 }
 </style>
 
@@ -3955,22 +3953,6 @@ window.addEventListener('scroll',()=>{
 //  NAV + MOBILE + FAQ + ACCORDION + MODAL + CALC
 // ============================================================
 const nav=document.getElementById('nav');
-// Fix Telegram in-app browser: nav gets pushed down, detect and compensate
-(function fixTelegramNav(){
-  const isTg=/Telegram/i.test(navigator.userAgent)||window.TelegramWebviewProxy;
-  if(!isTg)return;
-  function fix(){
-    const gap=nav.getBoundingClientRect().top;
-    if(gap>0){
-      nav.style.top=-gap+'px';
-      document.body.style.paddingTop=(nav.offsetHeight-gap)+'px';
-    }
-  }
-  fix();
-  window.addEventListener('resize',fix);
-  setTimeout(fix,100);
-  setTimeout(fix,500);
-})();
 window.addEventListener('scroll',()=>{nav.classList.toggle('scrolled',scrollY>50)},{passive:true});
 
 function toggleMobile(){document.getElementById('mobileMenu').classList.toggle('open')}
