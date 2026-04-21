@@ -51,7 +51,7 @@
 
 /* === RESET === */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;-webkit-text-size-adjust:100%;text-size-adjust:100%;background:#0C1120}
 body{font-family:var(--sans);background:var(--void);color:var(--ivory);line-height:1.7;overflow-x:hidden;cursor:none;font-size:15px}
 
 /* === GLOBAL GRADIENT MESH — animated fixed background === */
@@ -2092,9 +2092,6 @@ body{padding-top:calc(48px + env(safe-area-inset-top,0px))!important}
 <!-- Custom cursor -->
 <div class="cursor" id="cursor"></div>
 <div class="cursor-dot" id="cursorDot"></div>
-
-<!-- Nav shield: covers any gap above nav in Telegram/WebViews -->
-<div style="position:fixed;top:0;left:0;right:0;height:60px;background:#0C1120;z-index:99"></div>
 
 <!-- 4.0 NAV (ticker inside) -->
 <nav class="nav" id="nav">
