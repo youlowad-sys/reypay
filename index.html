@@ -2083,18 +2083,7 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;hei
 </head>
 
 <body>
-<!-- Scroll progress bar -->
-<div class="scroll-progress" id="scrollProgress"></div>
-<!-- Floating particles container -->
-<div id="particles" style="position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden"></div>
-<!-- Custom cursor -->
-<div class="cursor" id="cursor"></div>
-<div class="cursor-dot" id="cursorDot"></div>
-
-<!-- Spacer: scrolls under Telegram/WebView chrome -->
-<div style="height:50px;background:#0C1120;margin-bottom:-50px"></div>
-
-<!-- 4.0 NAV (ticker inside) -->
+<!-- 4.0 NAV (ticker inside) — MUST be first child of body for sticky -->
 <nav class="nav" id="nav">
   <div class="crt-ticker"><div class="crt-ticker-inner">
   <span>Mercado Pago</span><span>Ual&aacute;</span><span>Naranja X</span><span>MODO</span><span>Transferencias 3.0 (QR)</span><span>Open Banking</span><span>Brubank</span><span>Lemon Cash</span><span>Personal Pay</span><span>Prex</span><span>CVU / CBU / Alias</span><span>Galicia</span><span>Santander</span><span>Banco de Ciudad</span><span>BBVA</span><span>Banco Provincia</span>
@@ -2119,6 +2108,12 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;hei
     </div>
   </div>
 </nav>
+
+<!-- Fixed UI elements (after nav so they don't break sticky) -->
+<div class="scroll-progress" id="scrollProgress"></div>
+<div id="particles" style="position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden"></div>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-dot" id="cursorDot"></div>
 
 <!-- GLOBAL ANIMATED BACKGROUND — visible across ALL sections -->
 <canvas id="globalCanvas" style="position:fixed;inset:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;opacity:.95"></canvas>
