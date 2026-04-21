@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ray v4 — Pain+Solution Stability | AI-платформа USDT</title>
 <meta name="description" content="AI-гибридный PSP для high-risk в Аргентине. Выплаты 0.2с, сеттлмент T+0 в USDT, $0 замороженных — свой working capital. 300+ корп. счетов.">
 <meta property="og:title" content="Ray">
@@ -52,7 +52,8 @@
 /* === RESET === */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;-webkit-text-size-adjust:100%;text-size-adjust:100%;background:#0C1120}
-body{font-family:var(--sans);background:var(--void);color:var(--ivory);line-height:1.7;overflow-x:clip;cursor:none;font-size:15px}
+body{font-family:var(--sans);background:var(--void);color:var(--ivory);line-height:1.7;cursor:none;font-size:15px}
+.page-wrap{overflow-x:hidden}
 
 /* === GLOBAL GRADIENT MESH — animated fixed background === */
 .global-gradient-mesh{
@@ -2109,7 +2110,8 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;hei
   </div>
 </nav>
 
-<!-- Fixed UI elements (after nav so they don't break sticky) -->
+<div class="page-wrap">
+<!-- Fixed UI elements -->
 <div class="scroll-progress" id="scrollProgress"></div>
 <div id="particles" style="position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden"></div>
 <div class="cursor" id="cursor"></div>
@@ -4847,5 +4849,6 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What types of operators do you work with?","acceptedAnswer":{"@type":"Answer","text":"Offshore iGaming operators licensed in Curacao, Anjouan, Tobique, Kahnawake targeting Latin American market."}},{"@type":"Question","name":"How fast is settlement?","acceptedAnswer":{"@type":"Answer","text":"T+0. USDT/USDC sent within minutes. Player payouts in 0.2 seconds."}},{"@type":"Question","name":"What if accounts get frozen?","acceptedAnswer":{"@type":"Answer","text":"AI monitors 300+ accounts. Traffic reroutes automatically in milliseconds. Own working capital ensures uninterrupted settlements."}}]}
 </script>
+</div><!-- /.page-wrap -->
 </body>
 </html>
