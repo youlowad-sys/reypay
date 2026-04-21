@@ -310,7 +310,7 @@ body::after{
 /* ==============================================
    4.0 NAV
    ============================================== */
-.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:20px 0;transition:all .3s}
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:20px 0;transition:padding .3s,background .3s,border .3s;-webkit-transform:translateZ(0);transform:translateZ(0);will-change:transform}
 .nav.scrolled{background:rgba(12,17,32,.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--ivory-line);padding:14px 0}
 .nav-inner{display:flex;align-items:center;justify-content:space-between;gap:24px}
 .nav-logo{font-family:var(--display);font-size:28px;font-weight:700;letter-spacing:-.03em;color:var(--ivory);transition:color .2s;display:inline-flex;overflow:hidden;position:relative}
@@ -2060,7 +2060,7 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;hei
 </style>
 
 <style id="ticker-css">
-.crt-ticker{position:fixed;top:0;left:0;right:0;z-index:10000;background:#0A1510;border-bottom:1px solid #50C87866;font-family:'JetBrains Mono','IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:#50C878;height:28px;display:flex;align-items:center;overflow:hidden;letter-spacing:.02em}
+.crt-ticker{position:fixed;top:0;left:0;right:0;z-index:10000;background:#0A1510;border-bottom:1px solid #50C87866;font-family:'JetBrains Mono','IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:#50C878;height:28px;display:flex;align-items:center;overflow:hidden;letter-spacing:.02em;-webkit-transform:translateZ(0);transform:translateZ(0)}
 .crt-ticker-inner{display:inline-flex;gap:42px;white-space:nowrap;animation:tick 80s linear infinite;padding-left:100%}
 .crt-ticker span{display:inline-flex;gap:6px;align-items:center}
 .crt-ticker span b{color:#50C878;font-weight:700;letter-spacing:.08em;opacity:.7}
