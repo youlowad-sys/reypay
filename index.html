@@ -73,11 +73,10 @@ body{font-family:var(--sans);background:var(--void);color:var(--ivory);line-heig
   bottom:-20%;right:-10%;
   animation:mesh-drift-2 34s ease-in-out infinite;
 }
-/* Mobile perf: reduce blur radius + slow down CSS animations */
+/* Mobile perf: reduce blur radius */
 @media(max-width:1023px){
   .global-gradient-mesh::before,.global-gradient-mesh::after{filter:blur(80px)}
-  .float-orb{filter:blur(40px);animation-duration:30s!important}
-  .scan-line{display:none!important}
+  .float-orb{filter:blur(40px)}
 }
 @keyframes mesh-drift-1{
   0%,100%{transform:translate(0,0) scale(1)}
@@ -3935,15 +3934,12 @@ if(heroBgNum){
 
 // === PARALLAX: float orbs move on scroll (via unified handler) ===
 const orbEls=document.querySelectorAll('.float-orb');
-if(!_isMobile){
-  // Skip orb parallax on mobile — barely visible, saves CPU
-  _scrollCallbacks.push(sy=>{
-    orbEls.forEach((orb,i)=>{
-      const factor=(i%3===0)?.15:(i%3===1)?-.1:.2;
-      orb.style.transform=`translateY(${sy*factor}px)`;
-    });
+_scrollCallbacks.push(sy=>{
+  orbEls.forEach((orb,i)=>{
+    const factor=(i%3===0)?.15:(i%3===1)?-.1:.2;
+    orb.style.transform=`translateY(${sy*factor}px)`;
   });
-}
+});
 
 // ============================================================
 //  3D TILT + MAGNETIC BUTTONS + PARALLAX
@@ -3975,28 +3971,24 @@ if(!_isMobile){
   });
 }
 
-// Parallax hero elements — via unified scroll handler, desktop only
-if(!_isMobile){
-  const geo1=document.getElementById('geo1'),geo2=document.getElementById('geo2'),geo3=document.getElementById('geo3');
-  _scrollCallbacks.push(s=>{
-    if(s<window.innerHeight*1.5){
-      if(geo1)geo1.style.transform=`rotate(45deg) translate(${s*.03}px,${s*.06}px)`;
-      if(geo2)geo2.style.transform=`translate(${s*-.04}px,${s*.05}px)`;
-      if(geo3)geo3.style.transform=`translate(${s*.05}px,${s*-.03}px)`;
-    }
-  });
-}
+// Parallax hero elements — via unified scroll handler
+const geo1=document.getElementById('geo1'),geo2=document.getElementById('geo2'),geo3=document.getElementById('geo3');
+_scrollCallbacks.push(s=>{
+  if(s<window.innerHeight*1.5){
+    if(geo1)geo1.style.transform=`rotate(45deg) translate(${s*.03}px,${s*.06}px)`;
+    if(geo2)geo2.style.transform=`translate(${s*-.04}px,${s*.05}px)`;
+    if(geo3)geo3.style.transform=`translate(${s*.05}px,${s*-.03}px)`;
+  }
+});
 
-// Mesh blob parallax — via unified scroll handler, desktop only
-if(!_isMobile){
-  const blobs=document.querySelectorAll('.mesh-bg .blob');
-  _scrollCallbacks.push(sy=>{
-    blobs.forEach((b,i)=>{
-      const sp=.015+i*.008;
-      b.style.transform=`translate(${Math.sin(sy*sp+i*2)*30}px,${Math.cos(sy*sp+i*1.5)*25}px)`;
-    });
+// Mesh blob parallax — via unified scroll handler
+const blobs=document.querySelectorAll('.mesh-bg .blob');
+_scrollCallbacks.push(sy=>{
+  blobs.forEach((b,i)=>{
+    const sp=.015+i*.008;
+    b.style.transform=`translate(${Math.sin(sy*sp+i*2)*30}px,${Math.cos(sy*sp+i*1.5)*25}px)`;
   });
-}
+});
 
 // ============================================================
 //  NAV + MOBILE + FAQ + ACCORDION + MODAL + CALC
