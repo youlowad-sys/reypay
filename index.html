@@ -90,10 +90,10 @@ body{font-family:var(--sans);background:var(--void);color:var(--ivory);line-heig
 
 /* === Make sections show canvas through them === */
 section{position:relative;z-index:2}
-section.sec{background:rgba(12,17,32,.82)}
-.engine-sec{background:rgba(12,17,32,.75) !important}
-.coverage-sec{background:rgba(12,17,32,.75) !important}
-.proof-bar{background:rgba(12,17,32,.8) !important}
+section.sec{background:transparent}
+.engine-sec{background:rgba(21,26,33,.5) !important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.coverage-sec{background:rgba(21,26,33,.5) !important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.proof-bar{background:rgba(21,26,33,.6) !important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 
 /* Per-section atmospheric gradient overlays */
 .section-glow{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
@@ -2124,7 +2124,7 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;hei
 <div class="cursor-dot" id="cursorDot"></div>
 
 <!-- GLOBAL ANIMATED BACKGROUND — visible across ALL sections -->
-<canvas id="globalCanvas" style="position:fixed;inset:0;width:100vw;height:100vh;z-index:1;pointer-events:none;opacity:.45"></canvas>
+<canvas id="globalCanvas" style="position:fixed;inset:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;opacity:.95"></canvas>
 <div class="global-gradient-mesh"></div>
 <div class="diag-grid"></div>
 
