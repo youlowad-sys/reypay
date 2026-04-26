@@ -73,6 +73,12 @@ body{font-family:var(--sans);background:var(--void);color:var(--ivory);line-heig
   bottom:-20%;right:-10%;
   animation:mesh-drift-2 34s ease-in-out infinite;
 }
+/* Mobile perf: reduce blur radius + slow down CSS animations */
+@media(max-width:1023px){
+  .global-gradient-mesh::before,.global-gradient-mesh::after{filter:blur(80px)}
+  .float-orb{filter:blur(40px);animation-duration:30s!important}
+  .scan-line{display:none!important}
+}
 @keyframes mesh-drift-1{
   0%,100%{transform:translate(0,0) scale(1)}
   33%{transform:translate(15vw,20vh) scale(1.1)}
@@ -2574,22 +2580,39 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;hei
 
 let mouseX=0,mouseY=0,curX=0,curY=0,scrollY=0;
 
-// === CUSTOM CURSOR ===
+// === GLOBAL PERF FLAGS ===
+const _isMobile=window.innerWidth<1024;
+const _mobileDPR=1; // Cap DPR on mobile to render 4x fewer pixels
+
+// === CUSTOM CURSOR (disabled on mobile — cursor hidden via CSS) ===
 const cursor=document.getElementById('cursor');
 const cursorDot=document.getElementById('cursorDot');
-document.addEventListener('mousemove',e=>{mouseX=e.clientX;mouseY=e.clientY;cursorDot.style.left=mouseX+'px';cursorDot.style.top=mouseY+'px'});
-(function tick(){curX+=(mouseX-curX)*.12;curY+=(mouseY-curY)*.12;cursor.style.left=curX+'px';cursor.style.top=curY+'px';requestAnimationFrame(tick)})();
-document.querySelectorAll('a,button,input,select,.tri-card,.pain-card,.stab-card,.dw-sat,.dw-label,.arg-method,.e-card,.test-card,.c-item,.fact-cell,.t-metric,.sav-item').forEach(el=>{
-  el.addEventListener('mouseenter',()=>cursor.classList.add('hover'));
-  el.addEventListener('mouseleave',()=>cursor.classList.remove('hover'));
-});
+if(!_isMobile){
+  document.addEventListener('mousemove',e=>{mouseX=e.clientX;mouseY=e.clientY;cursorDot.style.left=mouseX+'px';cursorDot.style.top=mouseY+'px'});
+  (function tick(){curX+=(mouseX-curX)*.12;curY+=(mouseY-curY)*.12;cursor.style.left=curX+'px';cursor.style.top=curY+'px';requestAnimationFrame(tick)})();
+  document.querySelectorAll('a,button,input,select,.tri-card,.pain-card,.stab-card,.dw-sat,.dw-label,.arg-method,.e-card,.test-card,.c-item,.fact-cell,.t-metric,.sav-item').forEach(el=>{
+    el.addEventListener('mouseenter',()=>cursor.classList.add('hover'));
+    el.addEventListener('mouseleave',()=>cursor.classList.remove('hover'));
+  });
+}
 
-// === SCROLL PROGRESS BAR ===
+// === UNIFIED SCROLL HANDLER (one listener instead of 5+) ===
 const scrollProg=document.getElementById('scrollProgress');
-window.addEventListener('scroll',()=>{
+let _scrollTicking=false;
+const _scrollCallbacks=[];
+function _onScroll(){
   scrollY=window.scrollY;
-  scrollProg.style.transform=`scaleX(${scrollY/(document.body.scrollHeight-window.innerHeight)})`;
+  for(let i=0;i<_scrollCallbacks.length;i++)_scrollCallbacks[i](scrollY);
+}
+window.addEventListener('scroll',()=>{
+  if(!_scrollTicking){
+    _scrollTicking=true;
+    requestAnimationFrame(()=>{_onScroll();_scrollTicking=false});
+  }
 },{passive:true});
+_scrollCallbacks.push(sy=>{
+  scrollProg.style.transform=`scaleX(${sy/(document.body.scrollHeight-window.innerHeight)})`;
+});
 
 // ============================================================
 //  HERO CANVAS — Animated network/circuit with traveling signals
@@ -2626,19 +2649,20 @@ window.addEventListener('scroll',()=>{
   const ctx=canvas.getContext('2d');
   let W,H,nodes=[],edges=[],signals=[],mouseX=-999,mouseY=-999;
   const accentRGB=[64,224,255];
-  const isMobile=window.innerWidth<1024;
+  const isMobile=_isMobile;
   let frame=0,paused=false;
+  const useDPR=isMobile?_mobileDPR:devicePixelRatio;
 
   // Pause when tab hidden
   document.addEventListener('visibilitychange',()=>{paused=document.hidden;if(!paused)requestAnimationFrame(draw)});
 
   function resize(){
-    W=canvas.width=window.innerWidth*devicePixelRatio;
-    H=canvas.height=window.innerHeight*devicePixelRatio;
+    W=canvas.width=window.innerWidth*useDPR;
+    H=canvas.height=window.innerHeight*useDPR;
     canvas.style.width=window.innerWidth+'px';
     canvas.style.height=window.innerHeight+'px';
     ctx.setTransform(1,0,0,1,0,0);
-    ctx.scale(devicePixelRatio,devicePixelRatio);
+    ctx.scale(useDPR,useDPR);
     initNodes();
   }
 
@@ -2667,8 +2691,8 @@ window.addEventListener('scroll',()=>{
   function draw(){
     if(paused)return;
     frame++;
-    // Mobile: skip every other frame
-    if(isMobile&&frame%2!==0){requestAnimationFrame(draw);return}
+    // Mobile: render every 3rd frame (~20fps) — saves 66% GPU vs 60fps
+    if(isMobile&&frame%3!==0){requestAnimationFrame(draw);return}
 
     const rW=window.innerWidth,rH=window.innerHeight;
     ctx.clearRect(0,0,rW,rH);
@@ -3171,9 +3195,10 @@ if(cmpTable){
   let W=0,H=0,dpr=1,cx=0,cy=0,orbitR=0;
   let activeModule=0,particleAngle=0,particleTargetAngle=0;
   let playing=false,visible=false,lastFrame=0;
+  let orbFrame=0;
   let moduleGlow=new Float32Array(6); // glow intensity per module 0..1
   let trailPoints=[];
-  const TRAIL_MAX=40;
+  const TRAIL_MAX=_isMobile?15:40;
   let centerPulse=0;
   let jumpingTo=-1,jumpProgress=0,jumpStartAngle=0,jumpEndAngle=0;
 
@@ -3184,7 +3209,7 @@ if(cmpTable){
 
   function resize(){
     const rect=canvas.parentElement.getBoundingClientRect();
-    dpr=Math.min(window.devicePixelRatio||1,2);
+    dpr=_isMobile?_mobileDPR:Math.min(window.devicePixelRatio||1,2);
     W=rect.width;H=rect.height;
     canvas.width=W*dpr;canvas.height=H*dpr;
     canvas.style.width=W+'px';canvas.style.height=H+'px';
@@ -3237,11 +3262,13 @@ if(cmpTable){
     ctx.beginPath();ctx.arc(cx,cy,coreR,0,Math.PI*2);
     ctx.fillStyle=ACID;ctx.fill();
 
-    // Core shadow glow
-    ctx.shadowColor=ACID;ctx.shadowBlur=Math.max(10,30*sc);
-    ctx.beginPath();ctx.arc(cx,cy,coreR,0,Math.PI*2);
-    ctx.fillStyle=ACID;ctx.fill();
-    ctx.shadowBlur=0;
+    // Core shadow glow (skip on mobile — shadowBlur is very expensive)
+    if(!_isMobile){
+      ctx.shadowColor=ACID;ctx.shadowBlur=Math.max(10,30*sc);
+      ctx.beginPath();ctx.arc(cx,cy,coreR,0,Math.PI*2);
+      ctx.fillStyle=ACID;ctx.fill();
+      ctx.shadowBlur=0;
+    }
 
     // Center text
     const cFs=Math.max(7,Math.round(11*sc));
@@ -3273,7 +3300,8 @@ if(cmpTable){
       ctx.lineWidth=1;
       ctx.stroke();
 
-      // Dashed version on top
+      // Dashed version on top (skip on mobile — barely visible)
+      if(_isMobile)continue;
       ctx.setLineDash([3,6]);
       ctx.beginPath();
       ctx.moveTo(p.x,p.y);
@@ -3294,9 +3322,10 @@ if(cmpTable){
       const isActive=i===activeModule;
       const baseR=Math.min(W,H)*0.07;const nodeR=isActive?baseR*1.18:baseR;
 
-      // Glow rings when active
+      // Glow rings when active (reduced on mobile: 1 ring, no gradient glow)
       if(glow>0.01){
-        for(let r=0;r<3;r++){
+        const ringCount=_isMobile?1:3;
+        for(let r=0;r<ringCount;r++){
           const ringR=nodeR+10+r*12;
           const ringAlpha=glow*(0.15-r*0.04);
           ctx.beginPath();ctx.arc(p.x,p.y,ringR,0,Math.PI*2);
@@ -3304,12 +3333,14 @@ if(cmpTable){
           ctx.lineWidth=1;ctx.stroke();
         }
 
-        // Outer glow
-        const glowGrad=ctx.createRadialGradient(p.x,p.y,nodeR,p.x,p.y,nodeR+40);
-        glowGrad.addColorStop(0,'rgba('+ACID_RGB.join(',')+','+(glow*0.2)+')');
-        glowGrad.addColorStop(1,'rgba('+ACID_RGB.join(',')+',0)');
-        ctx.beginPath();ctx.arc(p.x,p.y,nodeR+40,0,Math.PI*2);
-        ctx.fillStyle=glowGrad;ctx.fill();
+        // Outer glow (skip gradient on mobile)
+        if(!_isMobile){
+          const glowGrad=ctx.createRadialGradient(p.x,p.y,nodeR,p.x,p.y,nodeR+40);
+          glowGrad.addColorStop(0,'rgba('+ACID_RGB.join(',')+','+(glow*0.2)+')');
+          glowGrad.addColorStop(1,'rgba('+ACID_RGB.join(',')+',0)');
+          ctx.beginPath();ctx.arc(p.x,p.y,nodeR+40,0,Math.PI*2);
+          ctx.fillStyle=glowGrad;ctx.fill();
+        }
       }
 
       // Node background
@@ -3324,8 +3355,8 @@ if(cmpTable){
       ctx.lineWidth=isActive?2:1;
       ctx.stroke();
 
-      // Shadow for active
-      if(isActive){
+      // Shadow for active (skip shadowBlur on mobile)
+      if(isActive&&!_isMobile){
         ctx.shadowColor=ACID;ctx.shadowBlur=20;
         ctx.beginPath();ctx.arc(p.x,p.y,nodeR,0,Math.PI*2);
         ctx.strokeStyle='rgba('+ACID_RGB.join(',')+',0.6)';
@@ -3413,27 +3444,33 @@ if(cmpTable){
     trailPoints.push({x:px,y:py,alpha:1});
     if(trailPoints.length>TRAIL_MAX)trailPoints.shift();
 
-    // Draw trail
+    // Draw trail (simplified on mobile — no gradient per point)
     for(let i=0;i<trailPoints.length;i++){
       const tp=trailPoints[i];
       tp.alpha*=0.92;
       if(tp.alpha<0.01)continue;
       const r=3*tp.alpha;
-      const grad=ctx.createRadialGradient(tp.x,tp.y,0,tp.x,tp.y,r+4);
-      grad.addColorStop(0,'rgba('+ACID_RGB.join(',')+','+(tp.alpha*0.6)+')');
-      grad.addColorStop(1,'rgba('+ACID_RGB.join(',')+',0)');
-      ctx.beginPath();ctx.arc(tp.x,tp.y,r+4,0,Math.PI*2);
-      ctx.fillStyle=grad;ctx.fill();
+      if(_isMobile){
+        ctx.beginPath();ctx.arc(tp.x,tp.y,r,0,Math.PI*2);
+        ctx.fillStyle='rgba('+ACID_RGB.join(',')+','+(tp.alpha*0.5)+')';
+        ctx.fill();
+      }else{
+        const grad=ctx.createRadialGradient(tp.x,tp.y,0,tp.x,tp.y,r+4);
+        grad.addColorStop(0,'rgba('+ACID_RGB.join(',')+','+(tp.alpha*0.6)+')');
+        grad.addColorStop(1,'rgba('+ACID_RGB.join(',')+',0)');
+        ctx.beginPath();ctx.arc(tp.x,tp.y,r+4,0,Math.PI*2);
+        ctx.fillStyle=grad;ctx.fill();
+      }
     }
 
-    // Main particle
-    ctx.shadowColor=ACID;ctx.shadowBlur=25;
+    // Main particle (no shadowBlur on mobile)
+    if(!_isMobile){ctx.shadowColor=ACID;ctx.shadowBlur=25}
     ctx.beginPath();ctx.arc(px,py,5,0,Math.PI*2);
     ctx.fillStyle=ACID;ctx.fill();
-    ctx.shadowBlur=15;
+    if(!_isMobile){ctx.shadowBlur=15}
     ctx.beginPath();ctx.arc(px,py,3,0,Math.PI*2);
     ctx.fillStyle='#fff';ctx.fill();
-    ctx.shadowBlur=0;
+    if(!_isMobile){ctx.shadowBlur=0}
 
     // Outer glow
     const pGrad=ctx.createRadialGradient(px,py,0,px,py,20);
@@ -3567,6 +3604,9 @@ if(cmpTable){
   // Main render loop
   function render(ts){
     if(!visible){requestAnimationFrame(render);return}
+    orbFrame++;
+    // Mobile: render every other frame (~30fps)
+    if(_isMobile&&orbFrame%2!==0){requestAnimationFrame(render);return}
     if(!lastFrame)lastFrame=ts;
     const dt=ts-lastFrame;lastFrame=ts;
 
@@ -3887,68 +3927,76 @@ if(heroBgNum){
       heroBgNum.style.opacity='.08';
     },600);
   },2400);
-  // Update on scroll only (no infinite RAF)
-  window.addEventListener('scroll',()=>{
-    heroBgNum.style.transform=`translateY(calc(-50% + ${scrollY*.08}px))`;
-  },{passive:true});
+  // Update on scroll only (no infinite RAF) — via unified handler
+  _scrollCallbacks.push(sy=>{
+    heroBgNum.style.transform=`translateY(calc(-50% + ${sy*.08}px))`;
+  });
 }
 
-// === PARALLAX: float orbs move on scroll ===
+// === PARALLAX: float orbs move on scroll (via unified handler) ===
 const orbEls=document.querySelectorAll('.float-orb');
-window.addEventListener('scroll',()=>{
-  const sy=window.scrollY;
-  orbEls.forEach((orb,i)=>{
-    const factor=(i%3===0)?.15:(i%3===1)?-.1:.2;
-    orb.style.transform=`translateY(${sy*factor}px)`;
+if(!_isMobile){
+  // Skip orb parallax on mobile — barely visible, saves CPU
+  _scrollCallbacks.push(sy=>{
+    orbEls.forEach((orb,i)=>{
+      const factor=(i%3===0)?.15:(i%3===1)?-.1:.2;
+      orb.style.transform=`translateY(${sy*factor}px)`;
+    });
   });
-},{passive:true});
+}
 
 // ============================================================
 //  3D TILT + MAGNETIC BUTTONS + PARALLAX
 // ============================================================
-document.querySelectorAll('.tilt-card').forEach(card=>{
-  card.addEventListener('mousemove',e=>{
-    const r=card.getBoundingClientRect();
-    const x=(e.clientX-r.left)/r.width-.5;
-    const y=(e.clientY-r.top)/r.height-.5;
-    card.style.transition='none';
-    card.style.transform=`perspective(800px) rotateY(${x*14}deg) rotateX(${-y*14}deg) scale(1.04)`;
-    card.style.boxShadow=`${-x*40}px ${y*40}px 80px rgba(0,0,0,.35),0 0 40px rgba(64,224,255,.08)`;
+// 3D Tilt + Magnetic — desktop only (no mousemove on touch devices)
+if(!_isMobile){
+  document.querySelectorAll('.tilt-card').forEach(card=>{
+    card.addEventListener('mousemove',e=>{
+      const r=card.getBoundingClientRect();
+      const x=(e.clientX-r.left)/r.width-.5;
+      const y=(e.clientY-r.top)/r.height-.5;
+      card.style.transition='none';
+      card.style.transform=`perspective(800px) rotateY(${x*14}deg) rotateX(${-y*14}deg) scale(1.04)`;
+      card.style.boxShadow=`${-x*40}px ${y*40}px 80px rgba(0,0,0,.35),0 0 40px rgba(64,224,255,.08)`;
+    });
+    card.addEventListener('mouseleave',()=>{
+      card.style.transition='all .6s cubic-bezier(.03,.98,.52,.99)';
+      card.style.transform='perspective(800px) rotateY(0) rotateX(0) scale(1)';
+      card.style.boxShadow='none';
+    });
   });
-  card.addEventListener('mouseleave',()=>{
-    card.style.transition='all .6s cubic-bezier(.03,.98,.52,.99)';
-    card.style.transform='perspective(800px) rotateY(0) rotateX(0) scale(1)';
-    card.style.boxShadow='none';
-  });
-});
 
-document.querySelectorAll('.btn-magnetic').forEach(btn=>{
-  btn.addEventListener('mousemove',e=>{
-    const r=btn.getBoundingClientRect();
-    btn.style.transform=`translate(${(e.clientX-r.left-r.width/2)*.3}px,${(e.clientY-r.top-r.height/2)*.3}px)`;
+  document.querySelectorAll('.btn-magnetic').forEach(btn=>{
+    btn.addEventListener('mousemove',e=>{
+      const r=btn.getBoundingClientRect();
+      btn.style.transform=`translate(${(e.clientX-r.left-r.width/2)*.3}px,${(e.clientY-r.top-r.height/2)*.3}px)`;
+    });
+    btn.addEventListener('mouseleave',()=>{btn.style.transform='translate(0,0)'});
   });
-  btn.addEventListener('mouseleave',()=>{btn.style.transform='translate(0,0)'});
-});
+}
 
-// Parallax hero elements
-const geo1=document.getElementById('geo1'),geo2=document.getElementById('geo2'),geo3=document.getElementById('geo3');
-window.addEventListener('scroll',()=>{
-  const s=scrollY;
-  if(s<window.innerHeight*1.5){
-    if(geo1)geo1.style.transform=`rotate(45deg) translate(${s*.03}px,${s*.06}px)`;
-    if(geo2)geo2.style.transform=`translate(${s*-.04}px,${s*.05}px)`;
-    if(geo3)geo3.style.transform=`translate(${s*.05}px,${s*-.03}px)`;
-  }
-},{passive:true});
-
-// Mesh blob parallax — scroll-driven, no RAF
-const blobs=document.querySelectorAll('.mesh-bg .blob');
-window.addEventListener('scroll',()=>{
-  blobs.forEach((b,i)=>{
-    const sp=.015+i*.008;
-    b.style.transform=`translate(${Math.sin(scrollY*sp+i*2)*30}px,${Math.cos(scrollY*sp+i*1.5)*25}px)`;
+// Parallax hero elements — via unified scroll handler, desktop only
+if(!_isMobile){
+  const geo1=document.getElementById('geo1'),geo2=document.getElementById('geo2'),geo3=document.getElementById('geo3');
+  _scrollCallbacks.push(s=>{
+    if(s<window.innerHeight*1.5){
+      if(geo1)geo1.style.transform=`rotate(45deg) translate(${s*.03}px,${s*.06}px)`;
+      if(geo2)geo2.style.transform=`translate(${s*-.04}px,${s*.05}px)`;
+      if(geo3)geo3.style.transform=`translate(${s*.05}px,${s*-.03}px)`;
+    }
   });
-},{passive:true});
+}
+
+// Mesh blob parallax — via unified scroll handler, desktop only
+if(!_isMobile){
+  const blobs=document.querySelectorAll('.mesh-bg .blob');
+  _scrollCallbacks.push(sy=>{
+    blobs.forEach((b,i)=>{
+      const sp=.015+i*.008;
+      b.style.transform=`translate(${Math.sin(sy*sp+i*2)*30}px,${Math.cos(sy*sp+i*1.5)*25}px)`;
+    });
+  });
+}
 
 // ============================================================
 //  NAV + MOBILE + FAQ + ACCORDION + MODAL + CALC
@@ -4111,7 +4159,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
   const starObs=new IntersectionObserver(([e])=>{
     starVisible=e.isIntersecting;
     if(starVisible&&!starInterval){
-      starInterval=setInterval(spawnStar,window.innerWidth<1024?1500:800);
+      starInterval=setInterval(spawnStar,_isMobile?2200:800);
     }else if(!starVisible&&starInterval){
       clearInterval(starInterval);starInterval=null;
     }
@@ -4154,7 +4202,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
       this.isSpeed=opts.isSpeed||false; // left gauge = speed (inverted: lower=better)
       this.progress=0;
       this.particles=[];
-      this.dpr=window.devicePixelRatio||1;
+      this.dpr=_isMobile?_mobileDPR:(window.devicePixelRatio||1);
       this.animating=false;
       this.started=false;
       this.resize();
@@ -4200,8 +4248,12 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
     }
     idleLoop(){
       this.idleRunning=true;
+      let idleFrame=0;
       const idle=()=>{
         if(!this.idleRunning)return;
+        idleFrame++;
+        // Mobile: render every 3rd frame for idle gauge
+        if(_isMobile&&idleFrame%3!==0){requestAnimationFrame(idle);return}
         this.draw();
         if(this.particles.length<15&&Math.random()<0.02)this.spawnParticle();
         requestAnimationFrame(idle);
@@ -4518,10 +4570,12 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
   const tooltip=document.getElementById('geoTooltip');
   const items=grid.querySelectorAll('.geo-item');
   const W=500,H=700;
-  let dpr=window.devicePixelRatio||1;
+  let dpr=_isMobile?_mobileDPR:(window.devicePixelRatio||1);
   let isVisible=false,animFrame;
   let hoveredCountry=null;
   let time=0;
+  let geoFrame=0;
+  let gridCache=null; // offscreen canvas for static grid
 
   /* hi-dpi */
   function resize(){
@@ -4591,15 +4645,17 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
   }
 
   /* grid overlay */
+  function buildGridCache(){
+    gridCache=document.createElement('canvas');
+    gridCache.width=W;gridCache.height=H;
+    const gc=gridCache.getContext('2d');
+    gc.strokeStyle='rgba(80,200,120,.03)';gc.lineWidth=.5;
+    for(let x=0;x<W;x+=40){gc.beginPath();gc.moveTo(x,0);gc.lineTo(x,H);gc.stroke()}
+    for(let y=0;y<H;y+=40){gc.beginPath();gc.moveTo(0,y);gc.lineTo(W,y);gc.stroke()}
+  }
   function drawGrid(){
-    ctx.strokeStyle='rgba(80,200,120,.03)';
-    ctx.lineWidth=.5;
-    for(let x=0;x<W;x+=40){
-      ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();
-    }
-    for(let y=0;y<H;y+=40){
-      ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();
-    }
+    if(!gridCache)buildGridCache();
+    ctx.drawImage(gridCache,0,0);
   }
 
   /* radar sweep from Buenos Aires */
@@ -4648,7 +4704,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
     });
   }
 
-  /* draw particles */
+  /* draw particles (simplified on mobile — no gradient glow) */
   function drawParticles(){
     for(let i=particles.length-1;i>=0;i--){
       const p=particles[i];
@@ -4657,13 +4713,13 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
       const x=p.sx+(p.tx-p.sx)*p.t;
       const y=p.sy+(p.ty-p.sy)*p.t;
       const a=p.alpha*(1-Math.abs(p.t-.5)*2);
-      /* glow */
-      const grd=ctx.createRadialGradient(x,y,0,x,y,p.size*4);
-      grd.addColorStop(0,'rgba(80,200,120,'+a+')');
-      grd.addColorStop(1,'rgba(80,200,120,0)');
-      ctx.fillStyle=grd;
-      ctx.fillRect(x-p.size*4,y-p.size*4,p.size*8,p.size*8);
-      /* core */
+      if(!_isMobile){
+        const grd=ctx.createRadialGradient(x,y,0,x,y,p.size*4);
+        grd.addColorStop(0,'rgba(80,200,120,'+a+')');
+        grd.addColorStop(1,'rgba(80,200,120,0)');
+        ctx.fillStyle=grd;
+        ctx.fillRect(x-p.size*4,y-p.size*4,p.size*8,p.size*8);
+      }
       ctx.beginPath();
       ctx.arc(x,y,p.size,0,Math.PI*2);
       ctx.fillStyle='rgba(80,200,120,'+a+')';
@@ -4694,8 +4750,9 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
 
     /* Argentina hub dot */
     const pulse=Math.sin(time*.06)*.5+.5;
-    /* expanding rings */
-    for(let i=0;i<3;i++){
+    /* expanding rings (1 on mobile, 3 on desktop) */
+    const ringCount=_isMobile?1:3;
+    for(let i=0;i<ringCount;i++){
       const phase=(time*.03+i*.33)%1;
       const ring_r=8+phase*30;
       const a=(1-phase)*.3;
@@ -4725,6 +4782,9 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
 
   /* main render */
   function render(){
+    geoFrame++;
+    // Mobile: render every other frame (~30fps)
+    if(_isMobile&&geoFrame%2!==0){if(isVisible)animFrame=requestAnimationFrame(render);return}
     time++;
     ctx.clearRect(0,0,W,H);
 
