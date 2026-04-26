@@ -2581,7 +2581,7 @@ let mouseX=0,mouseY=0,curX=0,curY=0,scrollY=0;
 
 // === GLOBAL PERF FLAGS ===
 const _isMobile=window.innerWidth<1024;
-const _mobileDPR=1; // Cap DPR on mobile to render 4x fewer pixels
+const _mobileDPR=Math.min(window.devicePixelRatio||1,2); // Keep native DPR for visual quality
 
 // === CUSTOM CURSOR (disabled on mobile — cursor hidden via CSS) ===
 const cursor=document.getElementById('cursor');
@@ -3197,7 +3197,7 @@ if(cmpTable){
   let orbFrame=0;
   let moduleGlow=new Float32Array(6); // glow intensity per module 0..1
   let trailPoints=[];
-  const TRAIL_MAX=_isMobile?15:40;
+  const TRAIL_MAX=40;
   let centerPulse=0;
   let jumpingTo=-1,jumpProgress=0,jumpStartAngle=0,jumpEndAngle=0;
 
@@ -3299,8 +3299,7 @@ if(cmpTable){
       ctx.lineWidth=1;
       ctx.stroke();
 
-      // Dashed version on top (skip on mobile — barely visible)
-      if(_isMobile)continue;
+      // Dashed version on top
       ctx.setLineDash([3,6]);
       ctx.beginPath();
       ctx.moveTo(p.x,p.y);
@@ -3321,10 +3320,9 @@ if(cmpTable){
       const isActive=i===activeModule;
       const baseR=Math.min(W,H)*0.07;const nodeR=isActive?baseR*1.18:baseR;
 
-      // Glow rings when active (reduced on mobile: 1 ring, no gradient glow)
+      // Glow rings when active
       if(glow>0.01){
-        const ringCount=_isMobile?1:3;
-        for(let r=0;r<ringCount;r++){
+        for(let r=0;r<3;r++){
           const ringR=nodeR+10+r*12;
           const ringAlpha=glow*(0.15-r*0.04);
           ctx.beginPath();ctx.arc(p.x,p.y,ringR,0,Math.PI*2);
@@ -3332,14 +3330,12 @@ if(cmpTable){
           ctx.lineWidth=1;ctx.stroke();
         }
 
-        // Outer glow (skip gradient on mobile)
-        if(!_isMobile){
-          const glowGrad=ctx.createRadialGradient(p.x,p.y,nodeR,p.x,p.y,nodeR+40);
-          glowGrad.addColorStop(0,'rgba('+ACID_RGB.join(',')+','+(glow*0.2)+')');
-          glowGrad.addColorStop(1,'rgba('+ACID_RGB.join(',')+',0)');
-          ctx.beginPath();ctx.arc(p.x,p.y,nodeR+40,0,Math.PI*2);
-          ctx.fillStyle=glowGrad;ctx.fill();
-        }
+        // Outer glow
+        const glowGrad=ctx.createRadialGradient(p.x,p.y,nodeR,p.x,p.y,nodeR+40);
+        glowGrad.addColorStop(0,'rgba('+ACID_RGB.join(',')+','+(glow*0.2)+')');
+        glowGrad.addColorStop(1,'rgba('+ACID_RGB.join(',')+',0)');
+        ctx.beginPath();ctx.arc(p.x,p.y,nodeR+40,0,Math.PI*2);
+        ctx.fillStyle=glowGrad;ctx.fill();
       }
 
       // Node background
@@ -3443,23 +3439,17 @@ if(cmpTable){
     trailPoints.push({x:px,y:py,alpha:1});
     if(trailPoints.length>TRAIL_MAX)trailPoints.shift();
 
-    // Draw trail (simplified on mobile — no gradient per point)
+    // Draw trail
     for(let i=0;i<trailPoints.length;i++){
       const tp=trailPoints[i];
       tp.alpha*=0.92;
       if(tp.alpha<0.01)continue;
       const r=3*tp.alpha;
-      if(_isMobile){
-        ctx.beginPath();ctx.arc(tp.x,tp.y,r,0,Math.PI*2);
-        ctx.fillStyle='rgba('+ACID_RGB.join(',')+','+(tp.alpha*0.5)+')';
-        ctx.fill();
-      }else{
-        const grad=ctx.createRadialGradient(tp.x,tp.y,0,tp.x,tp.y,r+4);
-        grad.addColorStop(0,'rgba('+ACID_RGB.join(',')+','+(tp.alpha*0.6)+')');
-        grad.addColorStop(1,'rgba('+ACID_RGB.join(',')+',0)');
-        ctx.beginPath();ctx.arc(tp.x,tp.y,r+4,0,Math.PI*2);
-        ctx.fillStyle=grad;ctx.fill();
-      }
+      const grad=ctx.createRadialGradient(tp.x,tp.y,0,tp.x,tp.y,r+4);
+      grad.addColorStop(0,'rgba('+ACID_RGB.join(',')+','+(tp.alpha*0.6)+')');
+      grad.addColorStop(1,'rgba('+ACID_RGB.join(',')+',0)');
+      ctx.beginPath();ctx.arc(tp.x,tp.y,r+4,0,Math.PI*2);
+      ctx.fillStyle=grad;ctx.fill();
     }
 
     // Main particle (no shadowBlur on mobile)
@@ -4696,7 +4686,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
     });
   }
 
-  /* draw particles (simplified on mobile — no gradient glow) */
+  /* draw particles */
   function drawParticles(){
     for(let i=particles.length-1;i>=0;i--){
       const p=particles[i];
@@ -4705,13 +4695,13 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
       const x=p.sx+(p.tx-p.sx)*p.t;
       const y=p.sy+(p.ty-p.sy)*p.t;
       const a=p.alpha*(1-Math.abs(p.t-.5)*2);
-      if(!_isMobile){
-        const grd=ctx.createRadialGradient(x,y,0,x,y,p.size*4);
-        grd.addColorStop(0,'rgba(80,200,120,'+a+')');
-        grd.addColorStop(1,'rgba(80,200,120,0)');
-        ctx.fillStyle=grd;
-        ctx.fillRect(x-p.size*4,y-p.size*4,p.size*8,p.size*8);
-      }
+      /* glow */
+      const grd=ctx.createRadialGradient(x,y,0,x,y,p.size*4);
+      grd.addColorStop(0,'rgba(80,200,120,'+a+')');
+      grd.addColorStop(1,'rgba(80,200,120,0)');
+      ctx.fillStyle=grd;
+      ctx.fillRect(x-p.size*4,y-p.size*4,p.size*8,p.size*8);
+      /* core */
       ctx.beginPath();
       ctx.arc(x,y,p.size,0,Math.PI*2);
       ctx.fillStyle='rgba(80,200,120,'+a+')';
@@ -4742,9 +4732,8 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
 
     /* Argentina hub dot */
     const pulse=Math.sin(time*.06)*.5+.5;
-    /* expanding rings (1 on mobile, 3 on desktop) */
-    const ringCount=_isMobile?1:3;
-    for(let i=0;i<ringCount;i++){
+    /* expanding rings */
+    for(let i=0;i<3;i++){
       const phase=(time*.03+i*.33)%1;
       const ring_r=8+phase*30;
       const a=(1-phase)*.3;
